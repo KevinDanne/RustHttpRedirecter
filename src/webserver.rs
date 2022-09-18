@@ -17,7 +17,7 @@ impl fmt::Display for InvalidRequest {
 impl Error for InvalidRequest {}
 
 pub fn create_webserver(port: &str) -> io::Result<TcpListener> {
-    return TcpListener::bind("127.0.0.1:".to_string() + port);
+    TcpListener::bind("127.0.0.1:".to_string() + port)
 }
 
 pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> Option<String> {
@@ -30,7 +30,7 @@ pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> Option<String> {
         .collect();
 
     let url_line = http_request.iter().find(|line| line.contains("GET"))?;
-    let url = url_line.split(" ").skip(1).next()?;
+    let url = url_line.split(' ').nth(1)?;
     Some(url.to_string())
 }
 
