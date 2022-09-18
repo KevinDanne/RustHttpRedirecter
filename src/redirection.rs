@@ -1,15 +1,9 @@
-use std::{error::Error, fmt, fs, io, str::FromStr};
+use std::{fs, io, str::FromStr};
+use thiserror::Error;
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
+#[error("string is invalid")]
 pub struct InvalidStrError;
-
-impl Error for InvalidStrError {}
-
-impl fmt::Display for InvalidStrError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "String {} is invalid", self)
-    }
-}
 
 pub struct Redirection {
     pub from: String,
@@ -33,36 +27,21 @@ impl FromStr for Redirection {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Error)]
 pub enum ReadRedirectionError {
-    IOError(io::Error),
-    ParseError(InvalidStrError),
-}
-
-impl Error for ReadRedirectionError {}
-
-impl fmt::Display for ReadRedirectionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::IOError(err) => err.fmt(f),
-            Self::ParseError(err) => err.fmt(f),
-        }
-    }
+    #[error("IO operation failed")]
+    IOError(#[from] io::Error),
+    #[error(transparent)]
+    ParseError(#[from] InvalidStrError),
 }
 
 pub fn get_redirections(file_name: &str) -> Result<Vec<Redirection>, ReadRedirectionError> {
-    let contents = match fs::read_to_string("./routes/".to_string() + file_name) {
-        Ok(val) => val,
-        Err(err) => return Err(ReadRedirectionError::IOError(err)),
-    };
+    let contents = fs::read_to_string("./routes/".to_string() + file_name)?;
 
     let mut redirections: Vec<Redirection> = vec![];
 
     for line in contents.lines() {
-        let redirection = match Redirection::from_str(line) {
-            Ok(val) => val,
-            Err(err) => return Err(ReadRedirectionError::ParseError(err)),
-        };
+        let redirection = Redirection::from_str(line)?;
         redirections.push(redirection);
     }
 

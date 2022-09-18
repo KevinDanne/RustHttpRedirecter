@@ -1,20 +1,13 @@
 use std::{
-    error::Error,
-    fmt,
     io::{self, BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
 };
 
-#[derive(Debug)]
+use thiserror::Error;
+
+#[derive(Debug, Error)]
+#[error("request is invalid")]
 pub struct InvalidRequest;
-
-impl fmt::Display for InvalidRequest {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "Request is invalid")
-    }
-}
-
-impl Error for InvalidRequest {}
 
 pub fn create_webserver(port: &str) -> io::Result<TcpListener> {
     TcpListener::bind("127.0.0.1:".to_string() + port)

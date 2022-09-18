@@ -1,4 +1,4 @@
-use std::{env, error::Error};
+use std::env;
 
 mod redirection;
 mod webserver;
@@ -27,7 +27,8 @@ fn show_help() {
     println!("If no config file is given. The file routes/default will be used.");
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+fn main() -> Result<(), color_eyre::Report> {
+    color_eyre::install()?;
     let args: Vec<String> = env::args().skip(1).collect();
     let config = if let Some(config) = parse_args(&args) {
         config
@@ -36,32 +37,23 @@ fn main() -> Result<(), Box<dyn Error>> {
         return Ok(());
     };
 
-    let redirections = match redirection::get_redirections(&config.file_name) {
-        Ok(val) => val,
-        Err(err) => return Err(Box::new(err)),
-    };
+    let redirections = redirection::get_redirections(&config.file_name)?;
 
     let listener = webserver::create_webserver("7878")?;
 
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let url = match webserver::get_url_from_tcpstream(&mut stream) {
-            Some(val) => val,
-            None => return Err(Box::new(webserver::InvalidRequest)),
-        };
+        let url =
+            webserver::get_url_from_tcpstream(&mut stream).ok_or(webserver::InvalidRequest)?;
 
         if let Some(redirection) = redirections
             .iter()
             .find(|redirection| redirection.from == url)
         {
-            if let Err(err) = webserver::redirect_client(&mut stream, &redirection.to) {
-                return Err(Box::new(err));
-            }
+            webserver::redirect_client(&mut stream, &redirection.to)?
         } else {
             let content = "No redirection found for url ".to_string() + &url;
-            if let Err(err) = webserver::send_response(&mut stream, &content) {
-                return Err(Box::new(err));
-            }
+            webserver::send_response(&mut stream, &content)?;
         }
     }
     Ok(())
