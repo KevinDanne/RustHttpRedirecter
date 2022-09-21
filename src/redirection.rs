@@ -1,13 +1,13 @@
-use std::{error::Error, fmt, fs, io, str::FromStr};
+use std::{fs, str::FromStr};
+
+use crate::error::Error;
 
 #[derive(Debug)]
 pub struct InvalidStrError;
 
-impl Error for InvalidStrError {}
-
-impl fmt::Display for InvalidStrError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "String {} is invalid", self)
+impl From<InvalidStrError> for Error {
+    fn from(e: InvalidStrError) -> Self {
+        Self::Parse(e)
     }
 }
 
@@ -20,11 +20,7 @@ impl FromStr for Redirection {
     type Err = InvalidStrError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let (from, to) = if let Some((from, to)) = s.split_once("=>") {
-            (from, to)
-        } else {
-            return Err(InvalidStrError);
-        };
+        let (from, to) = s.split_once("=>").ok_or(InvalidStrError)?;
 
         Ok(Self {
             from: from.trim().to_string(),
@@ -33,36 +29,13 @@ impl FromStr for Redirection {
     }
 }
 
-#[derive(Debug)]
-pub enum ReadRedirectionError {
-    IOError(io::Error),
-    ParseError(InvalidStrError),
-}
-
-impl Error for ReadRedirectionError {}
-
-impl fmt::Display for ReadRedirectionError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        match self {
-            Self::IOError(err) => err.fmt(f),
-            Self::ParseError(err) => err.fmt(f),
-        }
-    }
-}
-
-pub fn get_redirections(file_name: &str) -> Result<Vec<Redirection>, ReadRedirectionError> {
-    let contents = match fs::read_to_string("./routes/".to_string() + file_name) {
-        Ok(val) => val,
-        Err(err) => return Err(ReadRedirectionError::IOError(err)),
-    };
+pub fn get_redirections(file_name: &str) -> Result<Vec<Redirection>, Error> {
+    let contents = fs::read_to_string(format!("./routes/{}", file_name))?;
 
     let mut redirections: Vec<Redirection> = vec![];
 
     for line in contents.lines() {
-        let redirection = match Redirection::from_str(line) {
-            Ok(val) => val,
-            Err(err) => return Err(ReadRedirectionError::ParseError(err)),
-        };
+        let redirection = Redirection::from_str(line)?;
         redirections.push(redirection);
     }
 
