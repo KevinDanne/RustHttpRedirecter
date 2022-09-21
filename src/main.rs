@@ -46,11 +46,7 @@ fn main() -> Result<(), Error> {
 
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let url = match webserver::get_url_from_tcpstream(&mut stream) {
-            Some(url) => url,
-            None => continue,
-        };
-
+        let url = webserver::get_url_from_tcpstream(&mut stream)?;
         match redirections
             .iter()
             .find(|redirection| redirection.from == url)
