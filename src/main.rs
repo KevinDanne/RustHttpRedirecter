@@ -46,17 +46,20 @@ fn main() -> Result<(), Error> {
 
     for stream in listener.incoming() {
         let mut stream = stream.unwrap();
-        let url = webserver::get_url_from_tcpstream(&mut stream)?;
-        match redirections
-            .iter()
-            .find(|redirection| redirection.from == url)
-        {
-            Some(redirection) => webserver::redirect_client(&mut stream, &redirection.to),
-            None => {
-                let content = format!("No redirection found for url {}", url);
-                webserver::send_response(&mut stream, &content)
+        if let Err(err) = webserver::get_url_from_tcpstream(&mut stream).and_then(|url| {
+            match redirections
+                .iter()
+                .find(|redirection| redirection.from == url)
+            {
+                Some(redirection) => webserver::redirect_client(&mut stream, &redirection.to),
+                None => {
+                    let content = format!("No redirection found for url {}", url);
+                    webserver::send_response(&mut stream, &content)
+                }
             }
-        }?;
+        }) {
+            eprintln!("Error: {}", err);
+        }
     }
     Ok(())
 }

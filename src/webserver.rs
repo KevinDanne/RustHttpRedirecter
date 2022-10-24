@@ -2,14 +2,14 @@ const HTTP_STATUS_200: &str = "HTTP/1.1 200 OK";
 const HTTP_STATUS_301: &str = "HTTP/1.1 301 Moved Permanently";
 
 use std::{
-    io::{self, BufRead, BufReader, Write},
+    io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
 };
 
 use crate::Error;
 
-pub fn create_webserver(port: u16) -> io::Result<TcpListener> {
-    TcpListener::bind(format!("127.0.0.1:{}", port))
+pub fn create_webserver(port: u16) -> Result<TcpListener, Error> {
+    Ok(TcpListener::bind(format!("127.0.0.1:{}", port))?)
 }
 
 pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> Result<String, Error> {
@@ -25,18 +25,18 @@ pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> Result<String, Error> {
         .to_owned())
 }
 
-pub fn send_response(stream: &mut TcpStream, content: &str) -> io::Result<()> {
+pub fn send_response(stream: &mut TcpStream, content: &str) -> Result<(), Error> {
     let length = content.len();
 
     let response = format!(
         "{}\r\nContent-Length: {}\r\n\r\n{}",
         HTTP_STATUS_200, length, content
     );
-    stream.write_all(response.as_bytes())
+    Ok(stream.write_all(response.as_bytes())?)
 }
 
-pub fn redirect_client(stream: &mut TcpStream, to: &str) -> io::Result<()> {
+pub fn redirect_client(stream: &mut TcpStream, to: &str) -> Result<(), Error> {
     let response = format!("{}\r\nLocation: {}", HTTP_STATUS_301, to);
 
-    stream.write_all(response.as_bytes())
+    Ok(stream.write_all(response.as_bytes())?)
 }
