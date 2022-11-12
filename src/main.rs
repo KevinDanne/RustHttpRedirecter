@@ -34,9 +34,9 @@ fn main() -> Result<(), Error> {
     let args = env::args().skip(1).collect::<Vec<String>>();
     let config = match parse_args(&args) {
         Ok(config) => config,
-        _ => {
+        Err(e) => {
             show_help();
-            return Err(Error::ArgumentCount);
+            return Err(e);
         }
     };
 
