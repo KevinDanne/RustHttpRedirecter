@@ -1,15 +1,30 @@
-const HTTP_STATUS_200: &str = "HTTP/1.1 200 OK";
-const HTTP_STATUS_301: &str = "HTTP/1.1 301 Moved Permanently";
-
 use std::{
     io::{BufRead, BufReader, Write},
     net::{TcpListener, TcpStream},
+    fmt::{self, Display}
 };
 
 use crate::Error;
 
+const HTTP_VERSION: &str = "HTTP/1.1";
+enum HTTPStatusCode {
+    C200,
+    C301
+}
+
+impl Display for HTTPStatusCode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let message = match self {
+            Self::C200 => "200 OK",
+            Self::C301 => "301 Moved Permanently"
+        };
+
+        write!(f, "{} {}", HTTP_VERSION, message)
+    }
+}
+
 pub fn create_webserver(port: u16) -> Result<TcpListener, Error> {
-    Ok(TcpListener::bind(format!("127.0.0.1:{}", port))?)
+    Ok(TcpListener::bind(format!("0.0.0.0:{}", port))?)
 }
 
 pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> Result<String, Error> {
@@ -30,13 +45,13 @@ pub fn send_response(stream: &mut TcpStream, content: &str) -> Result<(), Error>
 
     let response = format!(
         "{}\r\nContent-Length: {}\r\n\r\n{}",
-        HTTP_STATUS_200, length, content
+        HTTPStatusCode::C200, length, content
     );
     Ok(stream.write_all(response.as_bytes())?)
 }
 
 pub fn redirect_client(stream: &mut TcpStream, to: &str) -> Result<(), Error> {
-    let response = format!("{}\r\nLocation: {}", HTTP_STATUS_301, to);
+    let response = format!("{}\r\nLocation: {}", HTTPStatusCode::C301, to);
 
     Ok(stream.write_all(response.as_bytes())?)
 }
