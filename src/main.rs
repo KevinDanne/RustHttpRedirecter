@@ -10,7 +10,7 @@ struct ProgramConfig {
     file_name: String,
 }
 
-fn parse_args(args: &[String]) -> Result<ProgramConfig, Error> {
+fn parse_args(args: &[String]) -> error::Result<ProgramConfig> {
     if args.len() > 1 {
         return Err(Error::ArgumentCount);
     }
@@ -30,7 +30,7 @@ fn show_help() {
     println!("If no config file is given. The file routes/default will be used.");
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> error::Result<()> {
     let args = env::args().skip(1).collect::<Vec<String>>();
     let config = match parse_args(&args) {
         Ok(config) => config,

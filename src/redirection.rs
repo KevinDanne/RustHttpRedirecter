@@ -1,6 +1,6 @@
 use std::{fs, str::FromStr};
 
-use crate::error::Error;
+use crate::error::{self, Error};
 
 #[derive(Debug)]
 pub struct InvalidStrError;
@@ -29,7 +29,7 @@ impl FromStr for Redirection {
     }
 }
 
-pub fn get_redirections(file_name: &str) -> Result<Vec<Redirection>, Error> {
+pub fn get_redirections(file_name: &str) -> error::Result<Vec<Redirection>> {
     let contents = fs::read_to_string(format!("./routes/{}", file_name))?;
 
     let mut redirections: Vec<Redirection> = vec![];

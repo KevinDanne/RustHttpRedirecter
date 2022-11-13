@@ -1,6 +1,7 @@
 use std::{
     fmt::{self, Display},
     io::Error as IoError,
+    result
 };
 
 use crate::redirection::InvalidStrError;
@@ -31,3 +32,5 @@ impl From<IoError> for Error {
         Self::IO(e)
     }
 }
+
+pub type Result<T> = result::Result<T, Error>;

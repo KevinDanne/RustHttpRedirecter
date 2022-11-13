@@ -4,7 +4,7 @@ use std::{
     fmt::{self, Display}
 };
 
-use crate::Error;
+use crate::error::{self, Error};
 
 const HTTP_VERSION: &str = "HTTP/1.1";
 enum HTTPStatusCode {
@@ -23,11 +23,11 @@ impl Display for HTTPStatusCode {
     }
 }
 
-pub fn create_webserver(port: u16) -> Result<TcpListener, Error> {
+pub fn create_webserver(port: u16) -> error::Result<TcpListener> {
     Ok(TcpListener::bind(format!("0.0.0.0:{}", port))?)
 }
 
-pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> Result<String, Error> {
+pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> error::Result<String> {
     let buf_reader = BufReader::new(stream);
     Ok(buf_reader
         .lines()
@@ -40,7 +40,7 @@ pub fn get_url_from_tcpstream(stream: &mut TcpStream) -> Result<String, Error> {
         .to_owned())
 }
 
-pub fn send_response(stream: &mut TcpStream, content: &str) -> Result<(), Error> {
+pub fn send_response(stream: &mut TcpStream, content: &str) -> error::Result<()> {
     let length = content.len();
 
     let response = format!(
@@ -50,7 +50,7 @@ pub fn send_response(stream: &mut TcpStream, content: &str) -> Result<(), Error>
     Ok(stream.write_all(response.as_bytes())?)
 }
 
-pub fn redirect_client(stream: &mut TcpStream, to: &str) -> Result<(), Error> {
+pub fn redirect_client(stream: &mut TcpStream, to: &str) -> error::Result<()> {
     let response = format!("{}\r\nLocation: {}", HTTPStatusCode::C301, to);
 
     Ok(stream.write_all(response.as_bytes())?)
