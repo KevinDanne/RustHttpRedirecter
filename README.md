@@ -1,4 +1,4 @@
-# RustHttpRedirecter
+# RustHttpRedirector
 
 A simple HTTP request redirector written in rust
 
